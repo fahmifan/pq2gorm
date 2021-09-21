@@ -15,8 +15,8 @@ Go 1.5 is acceptable, but `GO15VENDOREXPERIMENT=1` must be set.
 After installing required version of Go, you can build and install `pq2gorm` by
 
 ```bash
-$ go get -d -u github.com/wantedly/pq2gorm
-$ cd $GOPATH/src/github.com/wantedly/pq2gorm
+$ go get -d -u github.com/fahmifan/pq2gorm
+$ cd $GOPATH/src/github.com/fahmifan/pq2gorm
 $ make
 $ make install
 ```
@@ -62,13 +62,19 @@ type User struct {
 **Example 2:** Generate gorm model files of all tables in `./out` directory.
 
 ```bash
-$ pq2gorm "postgresql://user:password@host:port/dbname?sslmode=disable" -d ./out
+$ pq2gorm "postgresql://user:password@host:port/dbname?sslmode=disable"  -dbtype postgres -d ./out
 ```
 
 **Example 3:** Generate gorm model files of `profiles` and `users` tables.
 
 ```bash
 $ pq2gorm "postgresql://user:password@host:port/dbname?sslmode=disable" -d ./out -t profiles,users
+```
+
+**Example 4** Generate gorm model files of all tables in `./out` directory for cockroachdb.
+
+```bash
+$ pq2gorm "postgresql://user:password@host:port/dbname?sslmode=disable"  -dbtype cockroachdb -dbname $dbname -d ./out
 ```
 
 If the directory `./out` does not exist, `pq2gorm` creates `./out` directory with output files.
