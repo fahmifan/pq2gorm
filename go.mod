@@ -1,4 +1,4 @@
-module github.com/wantedly/pq2gorm
+module github.com/fahmifan/pq2gorm
 
 go 1.17
 
@@ -9,7 +9,6 @@ require (
 )
 
 require (
-	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 	github.com/onsi/ginkgo v1.16.4 // indirect
 	github.com/onsi/gomega v1.16.0 // indirect
 )
