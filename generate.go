@@ -131,17 +131,17 @@ func inferORM(s string, tables []string) (bool, string) {
 	ss := strings.Split(s, "_")
 
 	newSS := []string{}
-	var containsID bool = false
+	var isContainsID bool = false
 	for _, word := range ss {
 		if word == "id" {
-			containsID = true
+			isContainsID = true
 			continue
 		}
 
 		newSS = append(newSS, word)
 	}
 
-	if containsID == false || len(newSS) == 0 {
+	if !isContainsID || len(newSS) == 0 {
 		return false, ""
 	}
 
