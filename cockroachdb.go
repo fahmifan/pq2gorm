@@ -8,33 +8,28 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type Postgres struct {
-	DB *sql.DB
+type CockroachDB struct {
+	DB     *sql.DB
+	DBName string
 }
 
-type Field struct {
-	Name     string
-	Type     string
-	Default  string
-	Nullable bool
-}
-
-func NewPostgres(url string) (*Postgres, error) {
+func NewCRDB(url, dbname string) (*CockroachDB, error) {
 	db, err := sql.Open("postgres", url)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Postgres{
-		DB: db,
+	return &CockroachDB{
+		DB:     db,
+		DBName: dbname,
 	}, nil
 }
 
-func (p *Postgres) retrieveAllTables() (*sql.Rows, error) {
-	return p.DB.Query(`select relname as TABLE_NAME from pg_stat_user_tables`)
+func (p *CockroachDB) retrieveAllTables() (*sql.Rows, error) {
+	return p.DB.Query(`select name as TABLE_NAME from crdb_internal.tables where database_name = $1`, p.DBName)
 }
 
-func (p *Postgres) retrieveSelectedTables(targets []string) (*sql.Rows, error) {
+func (p *CockroachDB) retrieveSelectedTables(targets []string) (*sql.Rows, error) {
 	qs := []string{}
 	params := []interface{}{}
 
@@ -43,14 +38,14 @@ func (p *Postgres) retrieveSelectedTables(targets []string) (*sql.Rows, error) {
 		params = append(params, t)
 	}
 
-	return p.DB.Query(`select relname as TABLE_NAME from pg_stat_user_tables where relname in (`+strings.Join(qs, ", ")+`)`, params...)
+	return p.DB.Query(`select name as TABLE_NAME from crdb_internal.tables where name in (`+strings.Join(qs, ", ")+`)`, params...)
 }
 
-func (p *Postgres) CloseConn() error {
+func (p *CockroachDB) CloseConn() error {
 	return p.DB.Close()
 }
 
-func (p *Postgres) RetrieveFields(table string) ([]*Field, error) {
+func (p *CockroachDB) RetrieveFields(table string) ([]*Field, error) {
 	query :=
 		`
     select column_name, data_type, COALESCE(column_default, '') as column_default, is_nullable
@@ -101,7 +96,7 @@ func (p *Postgres) RetrieveFields(table string) ([]*Field, error) {
 	return fields, nil
 }
 
-func (p *Postgres) RetrieveTables(targets []string) ([]string, error) {
+func (p *CockroachDB) RetrieveTables(targets []string) ([]string, error) {
 	var (
 		rows *sql.Rows
 		err  error
@@ -134,7 +129,7 @@ func (p *Postgres) RetrieveTables(targets []string) ([]string, error) {
 	return tables, nil
 }
 
-func (p *Postgres) RetrievePrimaryKeys(table string) (map[string]bool, error) {
+func (p *CockroachDB) RetrievePrimaryKeys(table string) (map[string]bool, error) {
 	query :=
 		`
     select

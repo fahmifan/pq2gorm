@@ -7,12 +7,27 @@ import (
 	"strings"
 )
 
-//go:generate go-bindata _templates/
+type DBType string
+
+const (
+	DBTypePostgres = DBType("postgres")
+	DBTypeCRDB     = DBType("cockroachdb")
+)
+
+type DBService interface {
+	RetrieveTables(targets []string) ([]string, error)
+	RetrieveFields(table string) ([]*Field, error)
+	RetrievePrimaryKeys(table string) (map[string]bool, error)
+	// Close close connection
+	CloseConn() error
+}
 
 func main() {
 	var (
-		dir string
-		ts  string
+		dir     string
+		ts      string
+		dbaname string
+		dbtype  string
 	)
 
 	f := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
@@ -29,6 +44,8 @@ Options:
 	f.StringVar(&dir, "d", "./", "Set output path")
 	f.StringVar(&ts, "tables", "", "Target tables (table1,table2,...) (default: all tables)")
 	f.StringVar(&ts, "t", "", "Target tables (table1,table2,...) (default: all tables)")
+	f.StringVar(&dbaname, "dbname", "", "Database name")
+	f.StringVar(&dbtype, "dbtype", "", "Database Type, available type: postgres, cockroachdb")
 
 	f.Parse(os.Args[1:])
 
@@ -51,12 +68,19 @@ Options:
 
 	fmt.Println("Connecting to database...")
 
-	postgres, err := NewPostgres(url)
+	var dbService DBService
+	var err error
+	switch DBType(dbtype) {
+	case DBTypeCRDB:
+		dbService, err = NewCRDB(url, dbaname)
+	case DBTypePostgres:
+		dbService, err = NewPostgres(url)
+	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	defer postgres.DB.Close()
+	defer dbService.CloseConn()
 
 	var targets []string
 
@@ -66,7 +90,7 @@ Options:
 		}
 	}
 
-	tables, err := postgres.RetrieveTables(targets)
+	tables, err := dbService.RetrieveTables(targets)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -77,13 +101,13 @@ Options:
 	for _, table := range tables {
 		fmt.Println("Table name: " + table)
 
-		pkeys, err := postgres.RetrievePrimaryKeys(table)
+		pkeys, err := dbService.RetrievePrimaryKeys(table)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 
-		fields, err := postgres.RetrieveFields(table)
+		fields, err := dbService.RetrieveFields(table)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"go/format"
 	"io/ioutil"
 	"path/filepath"
@@ -95,13 +96,11 @@ func AddHasMany(params *TemplateParams) {
 	}
 }
 
-func SaveModel(table string, params *TemplateParams, outPath string) error {
-	body, err := Asset("_templates/model.go.tmpl")
-	if err != nil {
-		return err
-	}
+//go:embed _templates/model.go.tmpl
+var modelTpl string
 
-	tmpl, err := template.New("").Parse(string(body))
+func SaveModel(table string, params *TemplateParams, outPath string) error {
+	tmpl, err := template.New("").Parse(modelTpl)
 	if err != nil {
 		return err
 	}
@@ -224,6 +223,8 @@ func gormDataType(s string) string {
 		return "time.Time"
 	case "date":
 		return "*time.Time"
+	case "bigint":
+		return "int64"
 	default:
 		return s
 	}

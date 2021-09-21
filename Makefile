@@ -3,7 +3,7 @@ LDFLAGS := -ldflags="-s -w"
 
 .DEFAULT_GOAL := bin/$(NAME)
 
-bin/$(NAME): deps
+bin/$(NAME):
 	go generate
 	go build $(LDFLAGS) -o bin/$(NAME)
 

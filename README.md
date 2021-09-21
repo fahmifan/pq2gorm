@@ -62,13 +62,19 @@ type User struct {
 **Example 2:** Generate gorm model files of all tables in `./out` directory.
 
 ```bash
-$ pq2gorm "postgresql://user:password@host:port/dbname?sslmode=disable" -d ./out
+$ pq2gorm "postgresql://user:password@host:port/dbname?sslmode=disable"  -dbtype postgres -d ./out
 ```
 
 **Example 3:** Generate gorm model files of `profiles` and `users` tables.
 
 ```bash
 $ pq2gorm "postgresql://user:password@host:port/dbname?sslmode=disable" -d ./out -t profiles,users
+```
+
+**Example 4** Generate gorm model files of all tables in `./out` directory for cockroachdb.
+
+```bash
+$ pq2gorm "postgresql://user:password@host:port/dbname?sslmode=disable"  -dbtype cockroachdb -dbname $dbname -d ./out
 ```
 
 If the directory `./out` does not exist, `pq2gorm` creates `./out` directory with output files.
